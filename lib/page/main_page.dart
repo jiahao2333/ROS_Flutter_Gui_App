@@ -578,6 +578,10 @@ class _MainFlamePageState extends State<MainFlamePage> {
           if (game.showInfoPanel && selectedNavPoint != null)
             Container(
               width: 300, // 固定宽度，不占满右侧
+              // 动态计算最大高度：屏幕总高度 - 顶部偏移(30) - 底部边距(20)
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height - 50,
+              ),
               child: Card(
                 elevation: 16,
                 shadowColor: Colors.black.withOpacity(0.3),
@@ -598,6 +602,7 @@ class _MainFlamePageState extends State<MainFlamePage> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0), // 减少内边距
+                    child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min, // 根据内容自适应高度
@@ -809,6 +814,7 @@ class _MainFlamePageState extends State<MainFlamePage> {
                 ),
               ),
             ),
+          ),
           
           // 原有的工具栏按钮
           Column(

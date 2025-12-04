@@ -38,14 +38,14 @@ dependencies:
 
   gamepads: ^0.1.4
   provider: ^6.1.2
-  easy_loading_button: ^0.3.2
+  easy_loading_button: ^0.4.0
   toast: ^0.3.0
   shared_preferences: ^2.2.3
   flutter_expandable_fab: ^2.0.0
   flutter_joystick: ^0.2.0
   web: ^1.0.0
   win32: ^5.5.4
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
   wakelock_plus: ^1.2.8
   flame: ^1.30.1
   flame_svg: ^1.10.0
