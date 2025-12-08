@@ -75,6 +75,12 @@ class RosChannel {
       ValueNotifier(DiagnosticArray());
   late DiagnosticManager diagnosticManager;
 
+  // Throttling timers
+  DateTime? _lastLaserTime;
+  DateTime? _lastOdomTime;
+  DateTime? _lastPointCloudTime;
+  DateTime? _lastFootprintTime;
+
   RosChannel() {
     diagnosticManager = DiagnosticManager();
 
@@ -247,16 +253,56 @@ class RosChannel {
         globalSetting.odomTopic, "nav_msgs/Odometry", odomCallback);
     rosBridgePlayer.subscribe(globalSetting.batteryTopic,
         "sensor_msgs/BatteryState", batteryCallback);
-    rosBridgePlayer.subscribe(globalSetting.robotFootprintTopic,
-        "geometry_msgs/PolygonStamped", robotFootprintCallback);
+    rosBridgePlayer.subscribe(globalSetting.diagnosticTopic,
+        "diagnostic_msgs/DiagnosticArray", diagnosticCallback);
+  }
+
+  // individual subscribe methods for heavy topics
+  void subscribeLaser() {
+    print("Subscribe laser");
+    rosBridgePlayer.subscribe(
+        globalSetting.laserTopic, "sensor_msgs/LaserScan", laserCallback);
+  }
+
+  void unsubscribeLaser() {
+    print("Unsubscribe laser");
+    rosBridgePlayer.unsubscribe(globalSetting.laserTopic);
+  }
+
+  void subscribePointCloud() {
+    print("Subscribe pointcloud");
+    rosBridgePlayer.subscribe(globalSetting.pointCloud2Topic,
+        "sensor_msgs/PointCloud2", pointCloud2Callback);
+  }
+
+  void unsubscribePointCloud() {
+    print("Unsubscribe pointcloud");
+    rosBridgePlayer.unsubscribe(globalSetting.pointCloud2Topic);
+  }
+
+  void subscribeCostmap() {
+    print("Subscribe costmaps");
     rosBridgePlayer.subscribe(globalSetting.localCostmapTopic,
         "nav_msgs/OccupancyGrid", localCostmapCallback);
     rosBridgePlayer.subscribe(globalSetting.globalCostmapTopic,
         "nav_msgs/OccupancyGrid", globalCostmapCallback);
-    rosBridgePlayer.subscribe(globalSetting.pointCloud2Topic,
-        "sensor_msgs/PointCloud2", pointCloud2Callback);
-    rosBridgePlayer.subscribe(globalSetting.diagnosticTopic,
-        "diagnostic_msgs/DiagnosticArray", diagnosticCallback);
+  }
+
+  void unsubscribeCostmap() {
+    print("Unsubscribe costmaps");
+    rosBridgePlayer.unsubscribe(globalSetting.localCostmapTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.globalCostmapTopic);
+  }
+
+  void subscribeFootprint() {
+    print("Subscribe footprint");
+    rosBridgePlayer.subscribe(globalSetting.robotFootprintTopic,
+        "geometry_msgs/PolygonStamped", robotFootprintCallback);
+  }
+
+  void unsubscribeFootprint() {
+    print("Unsubscribe footprint");
+    rosBridgePlayer.unsubscribe(globalSetting.robotFootprintTopic);
   }
 
   // 取消订阅地图相关数据
@@ -273,14 +319,17 @@ class RosChannel {
     rosBridgePlayer.unsubscribe(globalSetting.globalPathTopic);
     rosBridgePlayer.unsubscribe(globalSetting.tracePathTopic);
     rosBridgePlayer.unsubscribe(globalSetting.odomTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.odomTopic);
     rosBridgePlayer.unsubscribe(globalSetting.batteryTopic);
-    rosBridgePlayer.unsubscribe(globalSetting.robotFootprintTopic);
-    rosBridgePlayer.unsubscribe(globalSetting.localCostmapTopic);
-    rosBridgePlayer.unsubscribe(globalSetting.globalCostmapTopic);
-    rosBridgePlayer.unsubscribe(globalSetting.pointCloud2Topic);
     // diagnosticTopic is global, maybe keep it? But user asked for fix crashes in map.
     // Let's unsubscribe it too to be safe and consistent with subscribeMapData.
     rosBridgePlayer.unsubscribe(globalSetting.diagnosticTopic);
+
+    // Also unsubscribe dynamic topics to be safe
+    unsubscribeLaser();
+    unsubscribePointCloud();
+    unsubscribeCostmap();
+    unsubscribeFootprint();
   }
 
   // 清理地图数据
@@ -494,6 +543,14 @@ class RosChannel {
   }
 
   Future<void> odomCallback(Map<String, dynamic> message) async {
+    // Throttle Odom to ~20Hz (50ms)
+    final now = DateTime.now();
+    if (_lastOdomTime != null &&
+        now.difference(_lastOdomTime!).inMilliseconds < 50) {
+      return;
+    }
+    _lastOdomTime = now;
+
     // 解析线速度 (vx, vy)
     double vx = message['twist']['twist']['linear']['x'];
     double vy = message['twist']['twist']['linear']['y'];
@@ -506,6 +563,14 @@ class RosChannel {
   }
 
   Future<void> robotFootprintCallback(Map<String, dynamic> message) async {
+    // Throttle Footprint to ~2Hz (500ms)
+    final now = DateTime.now();
+    if (_lastFootprintTime != null &&
+        now.difference(_lastFootprintTime!).inMilliseconds < 500) {
+      return;
+    }
+    _lastFootprintTime = now;
+
     try {
       PolygonStamped polygonStamped = PolygonStamped.fromJson(message);
 
@@ -742,6 +807,14 @@ class RosChannel {
   }
 
   Future<void> laserCallback(Map<String, dynamic> msg) async {
+    // Throttle Laser to ~10Hz (100ms)
+    final now = DateTime.now();
+    if (_lastLaserTime != null &&
+        now.difference(_lastLaserTime!).inMilliseconds < 100) {
+      return;
+    }
+    _lastLaserTime = now;
+
     // print("${json.encode(msg)}");
     LaserScan laser = LaserScan.fromJson(msg);
     RobotPose laserPoseBase = RobotPose(0, 0, 0);
@@ -858,6 +931,14 @@ class RosChannel {
   }
 
   Future<void> pointCloud2Callback(Map<String, dynamic> msg) async {
+    // Throttle PointCloud to ~2Hz (500ms) - very heavy
+    final now = DateTime.now();
+    if (_lastPointCloudTime != null &&
+        now.difference(_lastPointCloudTime!).inMilliseconds < 500) {
+      return;
+    }
+    _lastPointCloudTime = now;
+
     try {
       PointCloud2 pointCloud = PointCloud2.fromJson(msg);
 
