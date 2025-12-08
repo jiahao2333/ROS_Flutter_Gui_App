@@ -85,7 +85,7 @@ async def handle_start_mapping():
     cleanup_all()
     
     # 1. 启动 SLAM
-    cmd_slam = "ros2 launch slam rviz_slam.launch.py"
+    cmd_slam = "ros2 launch slam slam.launch.py"
     if not run_command_bg(cmd_slam, "slam"):
         return False, "启动 SLAM 失败"
         
