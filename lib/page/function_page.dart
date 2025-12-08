@@ -22,6 +22,13 @@ class _FunctionPageState extends State<FunctionPage> {
         title: Text(AppLocalizations.of(context)?.connect_robot ??
             'Function Selection'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.stop_circle_outlined, color: Colors.red),
+            tooltip: "Stop All Processes",
+            onPressed: _handleStopAll,
+          ),
+        ],
       ),
       body: Center(
         child: Padding(
@@ -208,6 +215,46 @@ class _FunctionPageState extends State<FunctionPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleStopAll() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Stop All Processes?"),
+        content:
+            const Text("This will terminate all running backend processes."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Stop", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        await _service.stopAll();
+        if (!mounted) return;
+        toastification.show(
+          context: context,
+          type: ToastificationType.success,
+          title: const Text("Success"),
+          description: const Text("All processes stopped."),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      } catch (e) {
+        _showError("Failed to stop processes: $e");
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _showError(String message) {

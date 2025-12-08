@@ -360,7 +360,7 @@ class _MainFlamePageState extends State<MainFlamePage> {
                     icon: const Icon(Icons.arrow_back),
                     color: Colors.black,
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      Navigator.maybePop(context);
                     },
                   ),
                 ),

@@ -114,4 +114,11 @@ class RobotControlService {
       return [];
     }
   }
+
+  Future<void> stopAll() async {
+    final response = await _sendCommand({"command": "stop_all"});
+    if (response['code'] != 0) {
+      throw Exception(response['message'] ?? "Unknown error");
+    }
+  }
 }

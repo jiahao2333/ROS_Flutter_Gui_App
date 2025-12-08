@@ -195,6 +195,10 @@ async def handler(websocket): # 为了兼容较新版本的 websockets 移除了
                          response = {"code": 0, "message": msg, "maps": maps}
                     else:
                          response = {"code": 1, "message": msg}
+
+                elif command == "stop_all":
+                    cleanup_all()
+                    response = {"code": 0, "message": "所有进程已停止"}
                 
                 await websocket.send(json.dumps(response))
                 

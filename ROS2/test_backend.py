@@ -1,12 +1,20 @@
 import sys
 import os
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 import asyncio
+import json
 
 # 如果不存在则 Mock websockets
-sys.modules['websockets'] = MagicMock()
-sys.modules['websockets.exceptions'] = MagicMock()
+mock_websockets = MagicMock()
+mock_exceptions = MagicMock()
+# 定义真实的 Exception 类以便在此处捕获
+class MockConnectionClosed(Exception):
+    pass
+mock_exceptions.ConnectionClosed = MockConnectionClosed
+mock_websockets.exceptions = mock_exceptions # LINK THEM
+sys.modules['websockets'] = mock_websockets
+sys.modules['websockets.exceptions'] = mock_exceptions
 
 # 现在导入 backend
 # 将当前目录添加到路径
@@ -41,7 +49,8 @@ class TestROS2Backend(unittest.IsolatedAsyncioTestCase):
         # 验证 2 次启动
         self.assertEqual(mock_popen.call_count, 2)
         args_list = [call.args[0] for call in mock_popen.call_args_list]
-        self.assertTrue(any("rviz_slam.launch.py" in cmd for cmd in args_list))
+        # 用户修改为 slam.launch.py
+        self.assertTrue(any("slam.launch.py" in cmd for cmd in args_list))
         self.assertTrue(any("rosbridge_websocket_launch.xml" in cmd for cmd in args_list))
 
     @patch('backend.subprocess.Popen')
@@ -83,6 +92,37 @@ class TestROS2Backend(unittest.IsolatedAsyncioTestCase):
         # 验证代码逻辑: "if ext in ['.yaml', '.pgm']"
         # 所以 house.png (.png) 应该被排除
         self.assertNotIn("house", maps)
+
+    @patch('backend.kill_process') 
+    async def test_stop_all_command(self, mock_kill):
+        # 我们可以通过 mock websocket 来测试处理程序
+        mock_ws = MagicMock()
+        mock_ws.remote_address = ('127.0.0.1', 12345)
+        mock_ws.send = AsyncMock()
+        
+        # 异步迭代器辅助类
+        class AsyncIter:
+            def __init__(self, items):
+                self.items = iter(items)
+            def __aiter__(self):
+                return self
+            async def __anext__(self):
+                try:
+                    return next(self.items)
+                except StopIteration:
+                    raise StopAsyncIteration
+
+        mock_ws.__aiter__.side_effect = lambda: AsyncIter([json.dumps({"command": "stop_all"})])
+        
+        await backend.handler(mock_ws)
+        
+        # 验证 kill_process 是否被所有已知的进程调用
+        # cleanup_all 对 bg_processes 中的每个键调用 kill_process（3 个键）
+        self.assertEqual(mock_kill.call_count, 3) 
+        mock_ws.send.assert_called()
+        args = json.loads(mock_ws.send.call_args[0][0])
+        self.assertEqual(args['code'], 0)
+
 
 if __name__ == '__main__':
     unittest.main()
