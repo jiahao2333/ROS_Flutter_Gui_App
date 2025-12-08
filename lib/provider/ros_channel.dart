@@ -852,7 +852,17 @@ class RosChannel {
 
   DateTime? _lastMapCallbackTime;
 
+  DateTime? _lastMapTime;
+
   Future<void> mapCallback(Map<String, dynamic> msg) async {
+    // Throttle Map updates to 1Hz (1000ms) to prevent UI freeze during SLAM
+    final now = DateTime.now();
+    if (_lastMapTime != null &&
+        now.difference(_lastMapTime!).inMilliseconds < 1000) {
+      return;
+    }
+    _lastMapTime = now;
+
     OccupancyMap map = OccupancyMap();
     map.mapConfig.resolution = msg["info"]["resolution"];
     map.mapConfig.width = msg["info"]["width"];
