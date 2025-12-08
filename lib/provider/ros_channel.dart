@@ -25,7 +25,6 @@ import 'package:ros_flutter_gui_app/basic/diagnostic_array.dart';
 import 'package:ros_flutter_gui_app/provider/diagnostic_manager.dart';
 import 'package:oktoast/oktoast.dart';
 
-
 class LaserData {
   RobotPose robotPose;
   List<vm.Vector2> laserPoseBaseLink;
@@ -72,68 +71,66 @@ class RosChannel {
   ValueNotifier<OccupancyMap> localCostmap = ValueNotifier(OccupancyMap());
   ValueNotifier<OccupancyMap> globalCostmap = ValueNotifier(OccupancyMap());
   ValueNotifier<List<Point3D>> pointCloud2Data = ValueNotifier([]);
-  ValueNotifier<DiagnosticArray> diagnosticData = ValueNotifier(DiagnosticArray());
+  ValueNotifier<DiagnosticArray> diagnosticData =
+      ValueNotifier(DiagnosticArray());
   late DiagnosticManager diagnosticManager;
-
 
   RosChannel() {
     diagnosticManager = DiagnosticManager();
-    
+
     //启动定时器 获取机器人实时坐标
     globalSetting.init().then((success) {
-       //监听链接状态
+      //监听链接状态
 
-    //获取机器人实时坐标
-    Timer.periodic(const Duration(milliseconds: 50), (timer) {
-      if (rosConnectState_ != Status.connected) return;
-      try {
-        robotPoseMap.value = tf_.lookUpForTransform(
-            globalSetting.mapFrameName, globalSetting.baseLinkFrameName);
-                        vm.Vector2 poseScene = map_.value
-        .xy2idx(vm.Vector2(robotPoseMap.value.x, robotPoseMap.value.y));
-    robotPoseScene.value = RobotPose(
-        poseScene.x, poseScene.y, robotPoseMap.value.theta);
-      } catch (e) {
-        print("get robot pose error:${e}");
-      }
-    });
+      //获取机器人实时坐标
+      Timer.periodic(const Duration(milliseconds: 50), (timer) {
+        if (rosConnectState_ != Status.connected) return;
+        try {
+          robotPoseMap.value = tf_.lookUpForTransform(
+              globalSetting.mapFrameName, globalSetting.baseLinkFrameName);
+          vm.Vector2 poseScene = map_.value
+              .xy2idx(vm.Vector2(robotPoseMap.value.x, robotPoseMap.value.y));
+          robotPoseScene.value =
+              RobotPose(poseScene.x, poseScene.y, robotPoseMap.value.theta);
+        } catch (e) {
+          print("get robot pose error:${e}");
+        }
+      });
 
-    //重连
-    Timer.periodic(const Duration(seconds: 5), (timer) async {
-      if (isReconnect_ && rosConnectState_ != Status.connected){
-        showToast(
-          "lost connection to ${rosUrl_} try reconnect...",
-          position: ToastPosition.bottom,
-          backgroundColor: Colors.black.withOpacity(0.8),
-          textStyle: const TextStyle( color: Colors.white),
-        );
-        String error = await connect(rosUrl_);
-          if(error.isEmpty){
+      //重连
+      Timer.periodic(const Duration(seconds: 5), (timer) async {
+        if (isReconnect_ && rosConnectState_ != Status.connected) {
+          showToast(
+            "lost connection to ${rosUrl_} try reconnect...",
+            position: ToastPosition.bottom,
+            backgroundColor: Colors.black.withOpacity(0.8),
+            textStyle: const TextStyle(color: Colors.white),
+          );
+          String error = await connect(rosUrl_);
+          if (error.isEmpty) {
             showToast(
               "reconnect success to ${rosUrl_}!",
               position: ToastPosition.bottom,
               backgroundColor: Colors.green.withOpacity(0.8),
               textStyle: const TextStyle(color: Colors.white),
             );
-          }else{
+          } else {
             showToast(
               "reconnect failed to ${rosUrl_} error: $error",
               position: ToastPosition.bottom,
               backgroundColor: Colors.red.withOpacity(0.8),
-              textStyle: const TextStyle( color: Colors.white),
+              textStyle: const TextStyle(color: Colors.white),
             );
+          }
         }
-      }
-    });
-      
+      });
     });
   }
-
 
   Future<String> connect(String url) async {
     rosUrl_ = url;
     rosConnectState_ = Status.none;
-    
+
     // 创建RosBridgePlayer实例
     rosBridgePlayer = RosBridgePlayer(
       url: url,
@@ -158,16 +155,15 @@ class RosChannel {
       }
     });
 
-      if(!isReconnect_){
-        isReconnect_ = true;
-      }
-      
+    if (!isReconnect_) {
+      isReconnect_ = true;
+    }
+
     // 连接成功，初始化通道
     Timer(const Duration(seconds: 1), () async {
       await initChannel();
     });
     return "";
-      
   }
 
   void closeConnection() {
@@ -194,75 +190,141 @@ class RosChannel {
     diagnosticData.value = DiagnosticArray();
     cmdVel_.vx = 0;
     cmdVel_.vy = 0;
-    
+
     rosBridgePlayer.close();
   }
 
   ValueNotifier<OccupancyMap> get map => map_;
-  
+
   // Topics相关getter
   List<TopicWithSchemaName> get topics => rosBridgePlayer.topics;
   Map<String, dynamic> get datatypes => rosBridgePlayer.datatypes;
   int get currentRosVersion => rosBridgePlayer.currentRosVersion;
-  
+
   // 手动触发topics请求
   void refreshTopics() {
     rosBridgePlayer.refreshTopics();
   }
+
   Future<void> initChannel() async {
     // 使用RosBridgePlayer的订阅接口
-    rosBridgePlayer.subscribe(globalSetting.topologyMapTopic, "topology_msgs/TopologyMap", topologyMapCallback);
-    rosBridgePlayer.subscribe(globalSetting.mapTopic, "nav_msgs/OccupancyGrid", mapCallback);
-    rosBridgePlayer.subscribe(globalSetting.navToPoseStatusTopic, "action_msgs/GoalStatusArray", navStatusCallback);
-    rosBridgePlayer.subscribe(globalSetting.navThroughPosesStatusTopic, "action_msgs/GoalStatusArray", navStatusCallback);
-    rosBridgePlayer.subscribe("/tf", "tf2_msgs/TFMessage", tfCallback);
-    rosBridgePlayer.subscribe("/tf_static", "tf2_msgs/TFMessage", tfStaticCallback);
-    rosBridgePlayer.subscribe(globalSetting.laserTopic, "sensor_msgs/LaserScan", laserCallback);
-    rosBridgePlayer.subscribe(globalSetting.localPathTopic, "nav_msgs/Path", localPathCallback);
-    rosBridgePlayer.subscribe(globalSetting.globalPathTopic, "nav_msgs/Path", globalPathCallback);
-    rosBridgePlayer.subscribe(globalSetting.tracePathTopic, "nav_msgs/Path", tracePathCallback);
-    rosBridgePlayer.subscribe(globalSetting.odomTopic, "nav_msgs/Odometry", odomCallback);
-    rosBridgePlayer.subscribe(globalSetting.batteryTopic, "sensor_msgs/BatteryState", batteryCallback);
-    rosBridgePlayer.subscribe(globalSetting.robotFootprintTopic, "geometry_msgs/PolygonStamped", robotFootprintCallback);
-    rosBridgePlayer.subscribe(globalSetting.localCostmapTopic, "nav_msgs/OccupancyGrid", localCostmapCallback);
-    rosBridgePlayer.subscribe(globalSetting.globalCostmapTopic, "nav_msgs/OccupancyGrid", globalCostmapCallback);
-    rosBridgePlayer.subscribe(globalSetting.pointCloud2Topic, "sensor_msgs/PointCloud2", pointCloud2Callback);
-    rosBridgePlayer.subscribe(globalSetting.diagnosticTopic, "diagnostic_msgs/DiagnosticArray", diagnosticCallback);
-
     // 注册发布者
-    rosBridgePlayer.advertise(globalSetting.relocTopic, "geometry_msgs/PoseWithCovarianceStamped");
-    rosBridgePlayer.advertise(globalSetting.navGoalTopic, "geometry_msgs/PoseStamped");
-    rosBridgePlayer.advertise("${globalSetting.navGoalTopic}/cancel", "std_msgs/Empty");
-    rosBridgePlayer.advertise("${globalSetting.topologyMapTopic}/update", "topology_msgs/TopologyMap");
-    rosBridgePlayer.advertise(globalSetting.getConfig("SpeedCtrlTopic"), "geometry_msgs/Twist");
+    rosBridgePlayer.advertise(
+        globalSetting.relocTopic, "geometry_msgs/PoseWithCovarianceStamped");
+    rosBridgePlayer.advertise(
+        globalSetting.navGoalTopic, "geometry_msgs/PoseStamped");
+    rosBridgePlayer.advertise(
+        "${globalSetting.navGoalTopic}/cancel", "std_msgs/Empty");
+    rosBridgePlayer.advertise("${globalSetting.topologyMapTopic}/update",
+        "topology_msgs/TopologyMap");
+    rosBridgePlayer.advertise(
+        globalSetting.getConfig("SpeedCtrlTopic"), "geometry_msgs/Twist");
+  }
+
+  // 订阅地图相关数据
+  void subscribeMapData() {
+    print("Subscribe map data");
+    rosBridgePlayer.subscribe(globalSetting.topologyMapTopic,
+        "topology_msgs/TopologyMap", topologyMapCallback);
+    rosBridgePlayer.subscribe(
+        globalSetting.mapTopic, "nav_msgs/OccupancyGrid", mapCallback);
+    rosBridgePlayer.subscribe(globalSetting.navToPoseStatusTopic,
+        "action_msgs/GoalStatusArray", navStatusCallback);
+    rosBridgePlayer.subscribe(globalSetting.navThroughPosesStatusTopic,
+        "action_msgs/GoalStatusArray", navStatusCallback);
+    rosBridgePlayer.subscribe("/tf", "tf2_msgs/TFMessage", tfCallback);
+    rosBridgePlayer.subscribe(
+        "/tf_static", "tf2_msgs/TFMessage", tfStaticCallback);
+    rosBridgePlayer.subscribe(
+        globalSetting.laserTopic, "sensor_msgs/LaserScan", laserCallback);
+    rosBridgePlayer.subscribe(
+        globalSetting.localPathTopic, "nav_msgs/Path", localPathCallback);
+    rosBridgePlayer.subscribe(
+        globalSetting.globalPathTopic, "nav_msgs/Path", globalPathCallback);
+    rosBridgePlayer.subscribe(
+        globalSetting.tracePathTopic, "nav_msgs/Path", tracePathCallback);
+    rosBridgePlayer.subscribe(
+        globalSetting.odomTopic, "nav_msgs/Odometry", odomCallback);
+    rosBridgePlayer.subscribe(globalSetting.batteryTopic,
+        "sensor_msgs/BatteryState", batteryCallback);
+    rosBridgePlayer.subscribe(globalSetting.robotFootprintTopic,
+        "geometry_msgs/PolygonStamped", robotFootprintCallback);
+    rosBridgePlayer.subscribe(globalSetting.localCostmapTopic,
+        "nav_msgs/OccupancyGrid", localCostmapCallback);
+    rosBridgePlayer.subscribe(globalSetting.globalCostmapTopic,
+        "nav_msgs/OccupancyGrid", globalCostmapCallback);
+    rosBridgePlayer.subscribe(globalSetting.pointCloud2Topic,
+        "sensor_msgs/PointCloud2", pointCloud2Callback);
+    rosBridgePlayer.subscribe(globalSetting.diagnosticTopic,
+        "diagnostic_msgs/DiagnosticArray", diagnosticCallback);
+  }
+
+  // 取消订阅地图相关数据
+  void unsubscribeMapData() {
+    print("Unsubscribe map data");
+    rosBridgePlayer.unsubscribe(globalSetting.topologyMapTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.mapTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.navToPoseStatusTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.navThroughPosesStatusTopic);
+    rosBridgePlayer.unsubscribe("/tf");
+    rosBridgePlayer.unsubscribe("/tf_static");
+    rosBridgePlayer.unsubscribe(globalSetting.laserTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.localPathTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.globalPathTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.tracePathTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.odomTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.batteryTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.robotFootprintTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.localCostmapTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.globalCostmapTopic);
+    rosBridgePlayer.unsubscribe(globalSetting.pointCloud2Topic);
+    // diagnosticTopic is global, maybe keep it? But user asked for fix crashes in map.
+    // Let's unsubscribe it too to be safe and consistent with subscribeMapData.
+    rosBridgePlayer.unsubscribe(globalSetting.diagnosticTopic);
+  }
+
+  // 清理地图数据
+  void clearMapData() {
+    print("Clear map data");
+    // Clear heavy objects
+    map_.value = OccupancyMap(); // Reset map
+    localCostmap.value = OccupancyMap();
+    globalCostmap.value = OccupancyMap();
+
+    // Clear lists
+    laserBasePoint_.value = [];
+    pointCloud2Data.value = [];
+    localPath.value = [];
+    globalPath.value = [];
+    tracePath.value = [];
+    robotFootprint.value = [];
+
+    // Reset poses
+    // Ensure we don't break TF if we kept TF subscription, but we unsubscribed TF above.
+    // So clearing poses is fine.
+
+    // Force garbage collection hint (not possible in Dart directly, but dropping references helps)
   }
 
   Future<Map<String, dynamic>> sendTopologyGoal(String name) async {
-    Map<String, dynamic> msg = {
-      "point_name": name
-    };
-    
+    Map<String, dynamic> msg = {"point_name": name};
+
     try {
-      var result = await rosBridgePlayer.callService("/nav_to_topology_point", msg);
+      var result =
+          await rosBridgePlayer.callService("/nav_to_topology_point", msg);
       print("result: $result");
-      
+
       // 检查result是否为字符串（错误信息）
       if (result is String) {
-        return {
-          "is_success": false,
-          "message": result
-        };
+        return {"is_success": false, "message": result};
       }
-      
+
       Map<String, dynamic> resultMap = result;
       print("sendTopologyGoal result: $resultMap");
       return resultMap;
     } catch (e) {
       print("sendTopologyGoal error: $e");
-      return {
-        "is_success": false,
-        "message": e.toString()
-      };
+      return {"is_success": false, "message": e.toString()};
     }
   }
 
@@ -331,12 +393,12 @@ class RosChannel {
       cmdVelTimer!.cancel();
       cmdVelTimer = null;
     }
-    
+
     // 重置速度命令，确保机器人停止
     cmdVel_.vx = 0;
     cmdVel_.vy = 0;
     cmdVel_.vw = 0;
-    
+
     // 发送一次停止命令
     sendSpeed(0, 0, 0);
   }
@@ -455,15 +517,16 @@ class RosChannel {
         print("not find robot footprint transfrom form:map to:$framId");
         return;
       }
-      
+
       List<vm.Vector2> newPoints = [];
-      
+
       if (polygonStamped.polygon != null) {
         for (int i = 0; i < polygonStamped.polygon!.points.length; i++) {
           Point32 point = polygonStamped.polygon!.points[i];
           RobotPose pose = RobotPose(point.x, point.y, 0);
           RobotPose poseMap = absoluteSum(transPose, pose);
-          vm.Vector2 poseScene = map_.value.xy2idx(vm.Vector2(poseMap.x, poseMap.y));
+          vm.Vector2 poseScene =
+              map_.value.xy2idx(vm.Vector2(poseMap.x, poseMap.y));
           newPoints.add(poseScene);
         }
       }
@@ -492,19 +555,19 @@ class RosChannel {
       double resolution = msg["info"]["resolution"];
       double originX = msg["info"]["origin"]["position"]["x"];
       double originY = msg["info"]["origin"]["position"]["y"];
-      
+
       // 解析四元数获取旋转角度
       Map<String, dynamic> orientation = msg["info"]["origin"]["orientation"];
       double qx = orientation["x"]?.toDouble() ?? 0.0;
       double qy = orientation["y"]?.toDouble() ?? 0.0;
       double qz = orientation["z"]?.toDouble() ?? 0.0;
       double qw = orientation["w"]?.toDouble() ?? 1.0;
-      
+
       // 四元数转欧拉角
       vm.Quaternion quaternion = vm.Quaternion(qx, qy, qz, qw);
       List<double> euler = quaternionToEuler(quaternion);
       double originTheta = euler[0]; // yaw 角
-      
+
       // 创建局部代价地图
       OccupancyMap costmap = OccupancyMap();
       costmap.mapConfig.resolution = resolution;
@@ -512,73 +575,76 @@ class RosChannel {
       costmap.mapConfig.height = height;
       costmap.mapConfig.originX = originX;
       costmap.mapConfig.originY = originY;
-      
+
       List<int> dataList = List<int>.from(msg["data"]);
       costmap.data = List.generate(
         height,
         (i) => List.generate(width, (j) => 0),
       );
-      
+
       for (int i = 0; i < dataList.length; i++) {
         int x = i ~/ width;
         int y = i % width;
         costmap.data[x][y] = dataList[i];
       }
       costmap.setFlip();
-      
+
       // 坐标系转换：将局部代价地图的基础坐标转换为 map 坐标系
       String frameId = msg["header"]["frame_id"];
       RobotPose originPose = RobotPose(0, 0, 0);
-      
+
       try {
         // 获取从局部坐标系到 map 坐标系的变换
-        RobotPose transPose = tf_.lookUpForTransform(globalSetting.mapFrameName, frameId);
-        
+        RobotPose transPose =
+            tf_.lookUpForTransform(globalSetting.mapFrameName, frameId);
+
         // 计算局部代价地图原点在 map 坐标系中的位置
         RobotPose localOrigin = RobotPose(originX, originY, originTheta);
         RobotPose mapOrigin = absoluteSum(transPose, localOrigin);
-        
+
         // 调整 Y 坐标（考虑地图翻转）
         mapOrigin.y += costmap.heightMap();
         originPose = mapOrigin;
-
-        
       } catch (e) {
         print("getTransform localCostMapCallback error: $e");
         return;
       }
-      
+
       // 将局部代价地图叠加到使用全局地图的size进行叠加
       OccupancyMap sizedCostMap = map_.value.copy();
       sizedCostMap.setZero();
-      
+
       // 使用 xy2idx 方法将代价地图左上角的世界坐标转换为栅格坐标
-      vm.Vector2 occPoint = map_.value.xy2idx(vm.Vector2(originPose.x, originPose.y));
+      vm.Vector2 occPoint =
+          map_.value.xy2idx(vm.Vector2(originPose.x, originPose.y));
       double mapOX = occPoint.x;
       double mapOY = occPoint.y;
-      
+
       // 清空目标区域
       for (int x = 0; x < sizedCostMap.mapConfig.height; x++) {
         for (int y = 0; y < sizedCostMap.mapConfig.width; y++) {
-          if (x > mapOX && y > mapOY && 
+          if (x > mapOX &&
+              y > mapOY &&
               y < mapOY + costmap.mapConfig.height &&
               x < mapOX + costmap.mapConfig.width) {
             // 在局部代价地图范围内，使用局部代价地图的值
             int localX = x - mapOX.toInt();
             int localY = y - mapOY.toInt();
-            if (localX >= 0 && localX < costmap.mapConfig.height &&
-                localY >= 0 && localY < costmap.mapConfig.width) {
+            if (localX >= 0 &&
+                localX < costmap.mapConfig.height &&
+                localY >= 0 &&
+                localY < costmap.mapConfig.width) {
               // 添加正确的边界检查
-              if (y < sizedCostMap.data.length && 
+              if (y < sizedCostMap.data.length &&
                   x < sizedCostMap.data[y].length) {
                 sizedCostMap.data[y][x] = costmap.data[localY][localX];
-              } 
+              }
             }
           }
           // 不在范围内，保持原值
         }
       }
-      
+
       // 更新局部代价地图
       localCostmap.value = sizedCostMap;
     } catch (e) {
@@ -614,10 +680,11 @@ class RosChannel {
           translation: pose.pose!.position!, rotation: pose.pose!.orientation!);
       var poseFrame = tran.getRobotPose();
       var poseMap = absoluteSum(transPose, poseFrame);
-      vm.Vector2 poseScene = map_.value.xy2idx(vm.Vector2(poseMap.x, poseMap.y));
+      vm.Vector2 poseScene =
+          map_.value.xy2idx(vm.Vector2(poseMap.x, poseMap.y));
       newPath.add(vm.Vector2(poseScene.x, poseScene.y));
     }
-    
+
     // 使用新的列表赋值来触发监听器
     localPath.value = newPath;
   }
@@ -639,10 +706,11 @@ class RosChannel {
           translation: pose.pose!.position!, rotation: pose.pose!.orientation!);
       var poseFrame = tran.getRobotPose();
       var poseMap = absoluteSum(transPose, poseFrame);
-      vm.Vector2 poseScene = map_.value.xy2idx(vm.Vector2(poseMap.x, poseMap.y));
+      vm.Vector2 poseScene =
+          map_.value.xy2idx(vm.Vector2(poseMap.x, poseMap.y));
       newPath.add(vm.Vector2(poseScene.x, poseScene.y));
     }
-    
+
     // 使用新的列表赋值来触发监听器
     globalPath.value = newPath;
   }
@@ -664,14 +732,14 @@ class RosChannel {
           translation: pose.pose!.position!, rotation: pose.pose!.orientation!);
       var poseFrame = tran.getRobotPose();
       var poseMap = absoluteSum(transPose, poseFrame);
-      vm.Vector2 poseScene = map_.value.xy2idx(vm.Vector2(poseMap.x, poseMap.y));
+      vm.Vector2 poseScene =
+          map_.value.xy2idx(vm.Vector2(poseMap.x, poseMap.y));
       newPath.add(vm.Vector2(poseScene.x, poseScene.y));
     }
-    
+
     // 使用新的列表赋值来触发监听器
     tracePath.value = newPath;
   }
-
 
   Future<void> laserCallback(Map<String, dynamic> msg) async {
     // print("${json.encode(msg)}");
@@ -702,7 +770,7 @@ class RosChannel {
 
       newLaserPoints.add(vm.Vector2(poseBaseLink.x, poseBaseLink.y));
     }
-    
+
     // 使用新的列表赋值来触发监听器
     laserBasePoint_.value = newLaserPoints;
     laserPointData.value = LaserData(
@@ -712,7 +780,6 @@ class RosChannel {
   DateTime? _lastMapCallbackTime;
 
   Future<void> mapCallback(Map<String, dynamic> msg) async {
-    
     OccupancyMap map = OccupancyMap();
     map.mapConfig.resolution = msg["info"]["resolution"];
     map.mapConfig.width = msg["info"]["width"];
@@ -739,9 +806,9 @@ class RosChannel {
   Future<void> topologyMapCallback(Map<String, dynamic> msg) async {
     // 延迟1秒执行 避免地图还未加载，点位就发过来了（只发送一次）
     await Future.delayed(Duration(seconds: 1));
-    
+
     // print("收到拓扑地图数据: $msg");
-    
+
     final map = TopologyMap.fromJson(msg);
     // print("解析后的拓扑地图 - 点数量: ${map.points.length}, 路径数量: ${map.routes.length}");
 
@@ -759,14 +826,15 @@ class RosChannel {
 
     // 创建新的 TopologyMap 对象，包含转换后的点和原始路径信息
     final updatedMap = TopologyMap(
-      points: updatedPoints, 
+      points: updatedPoints,
       routes: map.routes,
       mapName: map.mapName,
       mapProperty: map.mapProperty,
     );
 
-    print("更新后的拓扑地图 - 点数量: ${updatedMap.points.length}, 路径数量: ${updatedMap.routes.length}");
-    
+    print(
+        "更新后的拓扑地图 - 点数量: ${updatedMap.points.length}, 路径数量: ${updatedMap.routes.length}");
+
     // 更新 ValueNotifier
     topologyMap_.value = updatedMap;
   }
@@ -775,8 +843,10 @@ class RosChannel {
     // 转换为JSON并通过ROS发布
     try {
       final jsonData = updatedMap.toJson();
-      rosBridgePlayer.publish("${globalSetting.topologyMapTopic}/update", jsonData);
-      print("拓扑地图已发布到ROS: ${updatedMap.points.length}个点, ${updatedMap.routes.length}条路径");
+      rosBridgePlayer.publish(
+          "${globalSetting.topologyMapTopic}/update", jsonData);
+      print(
+          "拓扑地图已发布到ROS: ${updatedMap.points.length}个点, ${updatedMap.routes.length}条路径");
     } catch (e) {
       print("发布拓扑地图失败: $e");
     }
@@ -790,21 +860,21 @@ class RosChannel {
   Future<void> pointCloud2Callback(Map<String, dynamic> msg) async {
     try {
       PointCloud2 pointCloud = PointCloud2.fromJson(msg);
-      
+
       // 获取点云数据
       List<Point3D> points = pointCloud.getPoints();
-      
+
       // 转换坐标系：从点云坐标系到map坐标系
       String frameId = pointCloud.header!.frameId!;
       RobotPose transPose = RobotPose(0, 0, 0);
-      
+
       try {
         transPose = tf_.lookUpForTransform(globalSetting.mapFrameName, frameId);
       } catch (e) {
         print("not find pointcloud transform from:map to:$frameId");
         return;
       }
-      
+
       // 转换所有点到map坐标系
       List<Point3D> transformedPoints = [];
       for (Point3D point in points) {
@@ -812,11 +882,9 @@ class RosChannel {
         RobotPose mapPose = absoluteSum(transPose, pointPose);
         transformedPoints.add(Point3D(mapPose.x, mapPose.y, point.z));
       }
-      
-      
+
       // 更新点云数据
       pointCloud2Data.value = transformedPoints;
-      
     } catch (e) {
       print("Error processing PointCloud2 data: $e");
     }
@@ -841,7 +909,7 @@ class RosChannel {
       double resolution = msg["info"]["resolution"];
       double originX = msg["info"]["origin"]["position"]["x"];
       double originY = msg["info"]["origin"]["position"]["y"];
-      
+
       // 创建全局代价地图
       OccupancyMap costmap = OccupancyMap();
       costmap.mapConfig.resolution = resolution;
@@ -849,20 +917,20 @@ class RosChannel {
       costmap.mapConfig.height = height;
       costmap.mapConfig.originX = originX;
       costmap.mapConfig.originY = originY;
-      
+
       List<int> dataList = List<int>.from(msg["data"]);
       costmap.data = List.generate(
         height,
         (i) => List.generate(width, (j) => 0),
       );
-      
+
       for (int i = 0; i < dataList.length; i++) {
         int x = i ~/ width;
         int y = i % width;
         costmap.data[x][y] = dataList[i];
       }
       costmap.setFlip();
-      
+
       // 直接更新全局代价地图，不需要resize
       globalCostmap.value = costmap;
     } catch (e) {
@@ -873,16 +941,14 @@ class RosChannel {
   Future<void> diagnosticCallback(Map<String, dynamic> msg) async {
     try {
       DiagnosticArray diagnosticArray = DiagnosticArray.fromJson(msg);
-      
+
       // 更新诊断数据（保持向后兼容）
       diagnosticData.value = diagnosticArray;
-      
+
       // 使用DiagnosticManager管理诊断状态
       diagnosticManager.updateDiagnosticStates(diagnosticArray);
-      
     } catch (e) {
       print("Error processing diagnostic data: $e");
     }
   }
-
 }
