@@ -1,22 +1,22 @@
-# Robot Control API Documentation
+# 机器人控制 API 文档
 
-**Protocol**: WebSocket
-**Port**: 8999
+**协议**: WebSocket
+**端口**: 8999
 
-## Overview
-This API is used to switch the robot between different functional modes (Mapping, Navigation). It runs on a secondary WebSocket server on the robot.
+## 概述
+此 API 用于在不同功能模式（建图、导航）之间切换机器人。它运行在机器人的辅助 WebSocket 服务器上。
 
-## Commands
+## 指令
 
-### Start Mapping Mode
-**Request**:
+### 开启建图模式
+**请求**:
 ```json
 {
   "command": "start_mapping"
 }
 ```
 
-**Response**:
+**响应**:
 ```json
 {
   "code": 0,
@@ -25,8 +25,8 @@ This API is used to switch the robot between different functional modes (Mapping
 ```
 
 
-### Start Navigation Mode
-**Request**:
+### 开启导航模式
+**请求**:
 ```json
 {
   "command": "start_navigation",
@@ -34,7 +34,7 @@ This API is used to switch the robot between different functional modes (Mapping
 }
 ```
 
-**Response**:
+**响应**:
 ```json
 {
   "code": 0,
@@ -42,8 +42,8 @@ This API is used to switch the robot between different functional modes (Mapping
 }
 ```
 
-### Save Map
-**Request**:
+### 保存地图
+**请求**:
 ```json
 {
   "command": "save_map",
@@ -51,7 +51,7 @@ This API is used to switch the robot between different functional modes (Mapping
 }
 ```
 
-**Response**:
+**响应**:
 ```json
 {
   "code": 0,
@@ -59,15 +59,15 @@ This API is used to switch the robot between different functional modes (Mapping
 }
 ```
 
-### Get Map List
-**Request**:
+### 获取地图列表
+**请求**:
 ```json
 {
   "command": "get_maps"
 }
 ```
 
-**Response**:
+**响应**:
 ```json
 {
   "code": 0,
@@ -76,10 +76,10 @@ This API is used to switch the robot between different functional modes (Mapping
 }
 ```
 
-## Error Handling
-If the command fails, the `code` will be non-zero.
+## 错误处理
+如果指令执行失败，`code` 将不为 0。
 
-**Example Error**:
+**错误示例**:
 ```json
 {
   "code": 1,
