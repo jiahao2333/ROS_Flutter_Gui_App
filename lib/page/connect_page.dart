@@ -66,7 +66,10 @@ class _ConnectPageState extends State<ConnectPage> {
                           ),
                         ],
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.2),
                           width: 1.5,
                         ),
                       ),
@@ -84,10 +87,14 @@ class _ConnectPageState extends State<ConnectPage> {
                             const SizedBox(height: 16),
                             Text(
                               AppLocalizations.of(context)!.connect_robot,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 32),
@@ -100,30 +107,42 @@ class _ConnectPageState extends State<ConnectPage> {
                                   child: TextField(
                                     controller: _ipController,
                                     decoration: InputDecoration(
-                                      labelText: AppLocalizations.of(context)!.ip_address,
+                                      labelText: AppLocalizations.of(context)!
+                                          .ip_address,
                                       labelStyle: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                       prefixIcon: Icon(
                                         Icons.computer,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.5),
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                           width: 2,
                                         ),
                                       ),
@@ -136,30 +155,42 @@ class _ConnectPageState extends State<ConnectPage> {
                                   child: TextField(
                                     controller: _portController,
                                     decoration: InputDecoration(
-                                      labelText: AppLocalizations.of(context)!.port,
+                                      labelText:
+                                          AppLocalizations.of(context)!.port,
                                       labelStyle: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                       prefixIcon: Icon(
                                         Icons.settings_ethernet,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.5),
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                           width: 2,
                                         ),
                                       ),
@@ -175,14 +206,18 @@ class _ConnectPageState extends State<ConnectPage> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _isConnecting ? null : _handleConnect,
+                                onPressed:
+                                    _isConnecting ? null : _handleConnect,
                                 style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
-                                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  foregroundColor:
+                                      Theme.of(context).colorScheme.onPrimary,
                                   elevation: 2,
                                 ),
                                 child: _isConnecting
@@ -191,11 +226,14 @@ class _ConnectPageState extends State<ConnectPage> {
                                         width: 20,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color: Theme.of(context).colorScheme.onPrimary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
                                         ),
                                       )
                                     : Text(
-                                        AppLocalizations.of(context)!.connect_robot,
+                                        AppLocalizations.of(context)!
+                                            .connect_robot,
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -208,10 +246,16 @@ class _ConnectPageState extends State<ConnectPage> {
                             // 主题切换
                             Container(
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surface
+                                    .withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.2),
                                 ),
                               ),
                               child: Padding(
@@ -222,7 +266,8 @@ class _ConnectPageState extends State<ConnectPage> {
                                     Icon(
                                       Icons.palette_outlined,
                                       size: 18,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
@@ -230,39 +275,56 @@ class _ConnectPageState extends State<ConnectPage> {
                                         segments: [
                                           ButtonSegment(
                                             value: ThemeMode.system,
-                                            icon: Icon(Icons.brightness_auto, size: 18),
+                                            icon: Icon(Icons.brightness_auto,
+                                                size: 18),
                                             label: Text(
-                                              AppLocalizations.of(context)!.auto,
-                                              style: const TextStyle(fontSize: 12),
+                                              AppLocalizations.of(context)!
+                                                  .auto,
+                                              style:
+                                                  const TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           ButtonSegment(
                                             value: ThemeMode.light,
-                                            icon: Icon(Icons.light_mode, size: 18),
+                                            icon: Icon(Icons.light_mode,
+                                                size: 18),
                                             label: Text(
-                                              AppLocalizations.of(context)!.light,
-                                              style: const TextStyle(fontSize: 12),
+                                              AppLocalizations.of(context)!
+                                                  .light,
+                                              style:
+                                                  const TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           ButtonSegment(
                                             value: ThemeMode.dark,
-                                            icon: Icon(Icons.dark_mode, size: 18),
+                                            icon:
+                                                Icon(Icons.dark_mode, size: 18),
                                             label: Text(
-                                              AppLocalizations.of(context)!.dark,
-                                              style: const TextStyle(fontSize: 12),
+                                              AppLocalizations.of(context)!
+                                                  .dark,
+                                              style:
+                                                  const TextStyle(fontSize: 12),
                                             ),
                                           ),
                                         ],
                                         selected: {
-                                          Provider.of<ThemeProvider>(context).themeMode
+                                          Provider.of<ThemeProvider>(context)
+                                              .themeMode
                                         },
-                                        onSelectionChanged: (Set<ThemeMode> selection) {
-                                          Provider.of<ThemeProvider>(context, listen: false)
-                                              .updateThemeMode(selection.first.index);
+                                        onSelectionChanged:
+                                            (Set<ThemeMode> selection) {
+                                          Provider.of<ThemeProvider>(context,
+                                                  listen: false)
+                                              .updateThemeMode(
+                                                  selection.first.index);
                                         },
                                         style: ButtonStyle(
-                                          side: MaterialStateProperty.all(BorderSide(
-                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                          side: MaterialStateProperty.all(
+                                              BorderSide(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withOpacity(0.5),
                                           )),
                                         ),
                                       ),
@@ -289,12 +351,18 @@ class _ConnectPageState extends State<ConnectPage> {
                         size: 24,
                       ),
                       style: IconButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surface
+                            .withOpacity(0.9),
                         padding: const EdgeInsets.all(8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.2),
                             width: 1.5,
                           ),
                         ),
@@ -322,7 +390,7 @@ class _ConnectPageState extends State<ConnectPage> {
 
       final error = await provider.connect("ws://$ip:$port");
       if (error.isEmpty) {
-        Navigator.pushNamed(context, "/map");
+        Navigator.pushNamed(context, "/function_page");
       } else {
         toastification.show(
           context: context,
