@@ -51,6 +51,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get base_frame => 'Base Frame';
 
   @override
+  String get error => 'Error';
+
+  @override
+  String get function_selection => 'Function Selection';
+
+  @override
   String get laser_frame => 'Laser Frame';
 
   @override
@@ -306,4 +312,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get erase_obstacle => 'Erase Obstacle';
+
+  @override
+  String get enter_mapping_mode => 'Enter Mapping Mode';
+
+  @override
+  String get enter_navigation_mode => 'Enter Navigation Mode';
+
+  @override
+  String get original_map => 'Original Map';
+
+  @override
+  String get no_maps_available => 'No maps available';
+
+  @override
+  String get execution_successful => 'Execution Successful';
+
+  @override
+  String get enter_map_confirm => 'Would you like to enter the map?';
+
+  @override
+  String get stop_all_processes => 'Stop All Processes?';
+
+  @override
+  String get stop_all_processes_confirm =>
+      'This will terminate all running backend processes.';
+
+  @override
+  String get success => 'Success';
+
+  @override
+  String get all_processes_stopped => 'All processes stopped.';
+
+  @override
+  String get select_map => 'Select Map';
+
+  @override
+  String get failed_to_start_mapping => 'Failed to start mapping';
+
+  @override
+  String get failed_to_get_map_list => 'Failed to get map list';
+
+  @override
+  String get failed_to_start_navigation => 'Failed to start navigation';
+
+  @override
+  String get failed_to_stop_processes => 'Failed to stop processes';
 }
