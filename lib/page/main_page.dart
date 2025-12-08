@@ -94,6 +94,12 @@ class _MainFlamePageState extends State<MainFlamePage> {
 
     // 监听诊断数据
     _setupDiagnosticListener();
+
+    // Clear any existing data and subscribe
+    // Use addPostFrameCallback to ensure context is valid if needed, though provider access is fine here.
+    // Adding a slight delay or just calling it directly.
+    rosChannel.clearMapData();
+    rosChannel.subscribeMapData();
   }
 
   // 重新加载导航点和地图数据
@@ -1440,8 +1446,13 @@ class _MainFlamePageState extends State<MainFlamePage> {
   void dispose() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
     ]);
+
+    // Cleanup subscriptions and data
+    final rosChannel = Provider.of<RosChannel>(context, listen: false);
+    rosChannel.unsubscribeMapData();
+    rosChannel.clearMapData();
+
     super.dispose();
   }
 }

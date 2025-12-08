@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 
 class LaserComponent extends Component {
   List<Vector2> pointList = [];
-  
+
   LaserComponent({required this.pointList});
 
   void updateLaser(List<Vector2> newPoints) {
-    pointList = newPoints.where((point) => 
-        point.x.isFinite && point.y.isFinite).toList();
+    pointList = newPoints
+        .where((point) => point.x.isFinite && point.y.isFinite)
+        .toList();
   }
 
   bool get hasLayout => true;
@@ -23,9 +24,7 @@ class LaserComponent extends Component {
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 1;
 
-    List<Offset> offsetPoints = pointList
-        .map((v) => Offset(v.x, v.y))
-        .toList();
+    List<Offset> offsetPoints = pointList.map((v) => Offset(v.x, v.y)).toList();
 
     canvas.drawPoints(PointMode.points, offsetPoints, paint);
   }
