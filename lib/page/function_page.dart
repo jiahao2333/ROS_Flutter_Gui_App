@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:ros_flutter_gui_app/global/setting.dart';
 import 'package:ros_flutter_gui_app/language/l10n/gen/app_localizations.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/status.dart' as status;
+import 'package:ros_flutter_gui_app/service/robot_control_service.dart';
 import 'package:toastification/toastification.dart';
 
 class FunctionPage extends StatefulWidget {
@@ -16,6 +13,7 @@ class FunctionPage extends StatefulWidget {
 
 class _FunctionPageState extends State<FunctionPage> {
   bool _isLoading = false;
+  final _service = RobotControlService();
 
   @override
   Widget build(BuildContext context) {
@@ -36,14 +34,14 @@ class _FunctionPageState extends State<FunctionPage> {
                 context,
                 title: "Enter Mapping Mode", // TODO: Add localization
                 icon: Icons.map_outlined,
-                onPressed: () => _handleModeCommand("start_mapping"),
+                onPressed: _handleStartMapping,
               ),
               const SizedBox(height: 24),
               _buildFunctionButton(
                 context,
                 title: "Enter Navigation Mode", // TODO: Add localization
                 icon: Icons.navigation_outlined,
-                onPressed: () => _handleModeCommand("start_navigation"),
+                onPressed: _handleStartNavigation,
               ),
               const SizedBox(height: 24),
               _buildFunctionButton(
@@ -51,7 +49,8 @@ class _FunctionPageState extends State<FunctionPage> {
                 title: "Original Map", // TODO: Add localization
                 icon: Icons.map,
                 onPressed: () {
-                  Navigator.pushNamed(context, "/map");
+                  Navigator.pushNamed(context, "/map",
+                      arguments: {'isMapping': false});
                 },
                 isPrimary: false,
               ),
@@ -109,69 +108,82 @@ class _FunctionPageState extends State<FunctionPage> {
     );
   }
 
-  Future<void> _handleModeCommand(String command) async {
+  Future<void> _handleStartMapping() async {
     setState(() => _isLoading = true);
-
-    final ip = globalSetting.robotIp;
-    // Port for the control service is 8999
-    final uri = Uri.parse("ws://$ip:8999");
-
-    WebSocketChannel? channel;
-
     try {
-      channel = WebSocketChannel.connect(uri);
-
-      // Wait for connection to be ready? WebSocketChannel.connect is synchronous in creation but async in connection.
-      // We'll just send and listen.
-
-      final request = jsonEncode({"command": command});
-      channel.sink.add(request);
-
-      // Listen for first response
-      final completer = Completer<void>();
-
-      final subscription = channel.stream.listen(
-        (message) {
-          try {
-            final data = jsonDecode(message);
-            if (data['code'] == 0) {
-              _showSuccessDialog();
-            } else {
-              _showError("Operation failed: ${data['message']}");
-            }
-          } catch (e) {
-            _showError("Invalid response format: $message");
-          } finally {
-            completer.complete();
-            channel?.sink.close(status.normalClosure);
-          }
-        },
-        onError: (error) {
-          _showError("Connection error: $error");
-          completer.complete();
-        },
-        onDone: () {
-          if (!completer.isCompleted) completer.complete();
-        },
-      );
-
-      // Timeout after 5 seconds
-      await completer.future.timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          subscription.cancel();
-          channel?.sink.close(status.goingAway);
-          _showError("Request timed out");
-        },
-      );
+      await _service.startMapping();
+      if (!mounted) return;
+      _showSuccessDialog(isMapping: true);
     } catch (e) {
-      _showError("Failed to connect: $e");
+      _showError("Failed to start mapping: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSuccessDialog() {
+  Future<void> _handleStartNavigation() async {
+    setState(() => _isLoading = true);
+    try {
+      final maps = await _service.getMapList();
+      if (!mounted) return;
+      // Show map selection dialog
+      if (maps.isEmpty) {
+        _showError("No maps available");
+        return;
+      }
+      _showMapSelectionDialog(maps);
+    } catch (e) {
+      _showError("Failed to get map list: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showMapSelectionDialog(List<String> maps) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Select Map"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: maps.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(maps[index]),
+                onTap: () {
+                  Navigator.pop(context); // Close selection dialog
+                  _confirmStartNavigation(maps[index]);
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmStartNavigation(String mapName) async {
+    setState(() => _isLoading = true);
+    try {
+      await _service.startNavigation(mapName);
+      if (!mounted) return;
+      _showSuccessDialog(isMapping: false);
+    } catch (e) {
+      _showError("Failed to start navigation: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSuccessDialog({required bool isMapping}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -188,7 +200,8 @@ class _FunctionPageState extends State<FunctionPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              Navigator.pushNamed(context, "/map");
+              Navigator.pushNamed(context, "/map",
+                  arguments: {'isMapping': isMapping});
             },
             child: const Text("Yes"),
           ),
@@ -203,7 +216,7 @@ class _FunctionPageState extends State<FunctionPage> {
       context: context,
       type: ToastificationType.error,
       style: ToastificationStyle.fillColored,
-      title: Text("Error"),
+      title: const Text("Error"),
       description: Text(message),
       autoCloseDuration: const Duration(seconds: 4),
     );

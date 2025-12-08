@@ -20,6 +20,7 @@ import 'package:ros_flutter_gui_app/page/gamepad_widget.dart';
 import 'package:ros_flutter_gui_app/basic/diagnostic_status.dart';
 import 'package:ros_flutter_gui_app/page/diagnostic_page.dart';
 import 'package:ros_flutter_gui_app/provider/diagnostic_manager.dart';
+import 'package:ros_flutter_gui_app/service/robot_control_service.dart';
 
 class MainFlamePage extends StatefulWidget {
   @override
@@ -32,12 +33,25 @@ class _MainFlamePageState extends State<MainFlamePage> {
   bool showCamera = false;
   NavPoint? selectedNavPoint;
 
+  // Mapping Mode State
+  bool _isMappingMode = false;
+  final _robotService = RobotControlService();
+
   // 相机相关变量
   Offset camPosition = Offset(30, 10); // 初始位置
   bool isCamFullscreen = false; // 是否全屏
   Offset camPreviousPosition = Offset(30, 10); // 保存进入全屏前的位置
   late double camWidgetWidth;
   late double camWidgetHeight;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic>) {
+      _isMappingMode = args['isMapping'] == true;
+    }
+  }
 
   @override
   void initState() {
@@ -157,51 +171,171 @@ class _MainFlamePageState extends State<MainFlamePage> {
     );
   }
 
+  Future<void> _handleMappingExit() async {
+    bool? shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Exit Mapping Mode"),
+        content: const Text("Do you want to save the map?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // No
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), // Yes
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSave == true) {
+      if (!mounted) return;
+      await _showSaveMapDialog();
+    }
+
+    // Always pop if we are done handling the exit (either saved or user said no)
+    // Actually, if user cancels the save dialog (not implemented yet, but if they could),
+    // we might want to stay. But here 'No' means 'Exit without saving'.
+    // 'Yes' means 'Save then Exit'.
+
+    if (mounted) {
+      Navigator.of(context).pop();
+      // Restore orientation
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    }
+  }
+
+  Future<void> _showSaveMapDialog() async {
+    final controller = TextEditingController();
+    String? mapName = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Save Map"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Enter map name"),
+        ),
+        actions: [
+          TextButton(
+            // If they cancel here, maybe we should just go back to map?
+            // But for now let's assume they want to cancel saving and exit?
+            // Or cancel saving and stay?
+            // Prompt implies: "If yes, will prompt for map name".
+            // If I cancel here, I probably just want to abort the save.
+            // But I'm already in the "Exit" flow.
+            // I'll assume cancel means "Don't save, just exit" or "Go back".
+            // Let's implement "Cancel" -> Return null (don't save).
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+
+    if (mapName != null && mapName.isNotEmpty) {
+      try {
+        // Show loading indicator
+        if (mounted) {
+          toastification.show(
+            context: context,
+            title: const Text("Saving map..."),
+            type: ToastificationType.info,
+            autoCloseDuration: const Duration(seconds: 2),
+          );
+        }
+
+        await _robotService.saveMap(mapName);
+
+        if (mounted) {
+          toastification.show(
+            context: context,
+            title: const Text("Map saved successfully"),
+            type: ToastificationType.success,
+            autoCloseDuration: const Duration(seconds: 2),
+          );
+        }
+        // Wait a bit or proceed to pop
+      } catch (e) {
+        if (mounted) {
+          toastification.show(
+            context: context,
+            title: const Text("Error saving map"),
+            description: Text(e.toString()),
+            type: ToastificationType.error,
+            autoCloseDuration: const Duration(seconds: 4),
+          );
+        }
+        // If error, do we still exit? Probably yes, or let user retry?
+        // For now, let's just show error and default to exiting to avoid getting stuck.
+        // Or maybe wait for user logic. The prompt asks to "prompt to save".
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // 游戏画布
-          Listener(
-            onPointerSignal: (pointerSignal) {
-              if (pointerSignal is PointerScrollEvent) {
-                final position = Vector2(
-                    pointerSignal.position.dx, pointerSignal.position.dy);
-                game.onScroll(pointerSignal.scrollDelta.dy, position);
-              }
-            },
-            child: GestureDetector(
-              onScaleStart: (details) {
-                final position = Vector2(
-                    details.localFocalPoint.dx, details.localFocalPoint.dy);
-                game.onScaleStart(position);
+    // Using WillPopScope for wider compatibility or PopScope if required.
+    // Given the constraints and likely usage, WillPopScope is safer for mixed versions.
+    // But since I'm editing a file that might be using modern Flutter, I'll use PopScope.
+    return PopScope(
+      canPop: !_isMappingMode,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        _handleMappingExit();
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // 游戏画布
+            Listener(
+              onPointerSignal: (pointerSignal) {
+                if (pointerSignal is PointerScrollEvent) {
+                  final position = Vector2(
+                      pointerSignal.position.dx, pointerSignal.position.dy);
+                  game.onScroll(pointerSignal.scrollDelta.dy, position);
+                }
               },
-              onScaleUpdate: (details) {
-                final position = Vector2(
-                    details.localFocalPoint.dx, details.localFocalPoint.dy);
-                game.onScaleUpdate(details.scale, position);
-              },
-              onScaleEnd: (details) {
-                game.onScaleEnd();
-              },
-              onTapDown: (details) {
-                // 处理点击事件，检测waypoint
-                game.onTap(details.localPosition);
-              },
-              child: GameWidget(game: game),
+              child: GestureDetector(
+                onScaleStart: (details) {
+                  final position = Vector2(
+                      details.localFocalPoint.dx, details.localFocalPoint.dy);
+                  game.onScaleStart(position);
+                },
+                onScaleUpdate: (details) {
+                  final position = Vector2(
+                      details.localFocalPoint.dx, details.localFocalPoint.dy);
+                  game.onScaleUpdate(details.scale, position);
+                },
+                onScaleEnd: (details) {
+                  game.onScaleEnd();
+                },
+                onTapDown: (details) {
+                  // 处理点击事件，检测waypoint
+                  game.onTap(details.localPosition);
+                },
+                child: GameWidget(game: game),
+              ),
             ),
-          ),
-          _buildTopMenuBar(context, theme),
-          _buildLeftToolbar(context, theme),
-          _buildRightToolbar(context, theme),
-          _buildBottomControls(context, theme),
-          _buildCameraWidget(context, theme),
-          _buildGamepadWidget(context, theme),
-          _buildMapLegend(context, theme),
-        ],
+            _buildTopMenuBar(context, theme),
+            _buildLeftToolbar(context, theme),
+            _buildRightToolbar(context, theme),
+            _buildBottomControls(context, theme),
+            _buildCameraWidget(context, theme),
+            _buildGamepadWidget(context, theme),
+            _buildMapLegend(context, theme),
+          ],
+        ),
       ),
     );
   }

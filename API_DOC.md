@@ -24,11 +24,13 @@ This API is used to switch the robot between different functional modes (Mapping
 }
 ```
 
+
 ### Start Navigation Mode
 **Request**:
 ```json
 {
-  "command": "start_navigation"
+  "command": "start_navigation",
+  "map_name": "map_name"
 }
 ```
 
@@ -37,6 +39,40 @@ This API is used to switch the robot between different functional modes (Mapping
 {
   "code": 0,
   "message": "success"
+}
+```
+
+### Save Map
+**Request**:
+```json
+{
+  "command": "save_map",
+  "map_name": "map_name"
+}
+```
+
+**Response**:
+```json
+{
+  "code": 0,
+  "message": "map saved successfully"
+}
+```
+
+### Get Map List
+**Request**:
+```json
+{
+  "command": "get_maps"
+}
+```
+
+**Response**:
+```json
+{
+  "code": 0,
+  "message": "success",
+  "maps": ["map1", "map2", "map3"]
 }
 ```
 
