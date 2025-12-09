@@ -110,9 +110,11 @@ class MainFlame extends FlameGame {
     );
     _displayGrid.updateThemeMode(isDarkMode);
 
-    _globalCostMapComponent = CostMapComponent(opacity: 0.3, isGlobal: true);
+    _globalCostMapComponent =
+        CostMapComponent(opacity: 0.3, isGlobal: true, rosChannel: rosChannel);
 
-    _localCostMapComponent = CostMapComponent(opacity: 0.5, isGlobal: false);
+    _localCostMapComponent =
+        CostMapComponent(opacity: 0.5, isGlobal: false, rosChannel: rosChannel);
 
     // 初始化新的Flame组件
     _laserComponent = LaserComponent(pointList: []);

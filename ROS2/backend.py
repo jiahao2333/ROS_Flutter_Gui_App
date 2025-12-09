@@ -45,9 +45,26 @@ def kill_process(name):
     else:
         logger.debug(f"没有运行中的 {name} 进程需要停止。")
 
+def run_stop_script():
+    """运行 ~/.stop_ros.sh 脚本以清理 ROS 环境"""
+    script_path = os.path.expanduser("~/.stop_ros.sh")
+    if os.path.exists(script_path):
+        logger.info(f"正在执行停止脚本: {script_path}")
+        try:
+            # 使用 bash 执行脚本
+            subprocess.run(f"bash {script_path}", shell=True)
+        except Exception as e:
+            logger.error(f"执行停止脚本失败: {e}")
+    else:
+        logger.warning(f"未找到停止脚本: {script_path}")
+
 def cleanup_all():
     """停止所有运行中的后台进程。"""
     logger.info("正在清理所有进程...")
+    
+    # 首先执行停止脚本
+    run_stop_script()
+    
     for name in list(bg_processes.keys()):
         kill_process(name)
 
