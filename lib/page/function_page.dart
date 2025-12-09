@@ -20,13 +20,12 @@ class _FunctionPageState extends State<FunctionPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)?.connect_robot ??
-            AppLocalizations.of(context)?.function_selection ??
             'Function Selection'),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.stop_circle_outlined, color: Colors.red),
-            tooltip: AppLocalizations.of(context)!.stop,
+            tooltip: "Stop All Processes",
             onPressed: _handleStopAll,
           ),
         ],
@@ -40,24 +39,21 @@ class _FunctionPageState extends State<FunctionPage> {
             children: [
               _buildFunctionButton(
                 context,
-                title: AppLocalizations.of(context)!
-                    .enter_mapping_mode, // TODO: Add localization
+                title: "Enter Mapping Mode", // TODO: Add localization
                 icon: Icons.map_outlined,
                 onPressed: _handleStartMapping,
               ),
               const SizedBox(height: 24),
               _buildFunctionButton(
                 context,
-                title: AppLocalizations.of(context)!
-                    .enter_navigation_mode, // TODO: Add localization
+                title: "Enter Navigation Mode", // TODO: Add localization
                 icon: Icons.navigation_outlined,
                 onPressed: _handleStartNavigation,
               ),
               const SizedBox(height: 24),
               _buildFunctionButton(
                 context,
-                title: AppLocalizations.of(context)!
-                    .original_map, // TODO: Add localization
+                title: "Original Map", // TODO: Add localization
                 icon: Icons.map,
                 onPressed: () {
                   Navigator.pushNamed(context, "/map",
@@ -126,8 +122,7 @@ class _FunctionPageState extends State<FunctionPage> {
       if (!mounted) return;
       _showSuccessDialog(isMapping: true);
     } catch (e) {
-      _showError(
-          "${AppLocalizations.of(context)!.failed_to_start_mapping}: $e");
+      _showError("Failed to start mapping: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -140,12 +135,12 @@ class _FunctionPageState extends State<FunctionPage> {
       if (!mounted) return;
       // Show map selection dialog
       if (maps.isEmpty) {
-        _showError(AppLocalizations.of(context)!.no_maps_available);
+        _showError("No maps available");
         return;
       }
       _showMapSelectionDialog(maps);
     } catch (e) {
-      _showError("${AppLocalizations.of(context)!.failed_to_get_map_list}: $e");
+      _showError("Failed to get map list: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -155,7 +150,7 @@ class _FunctionPageState extends State<FunctionPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.select_map),
+        title: const Text("Select Map"),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -189,8 +184,7 @@ class _FunctionPageState extends State<FunctionPage> {
       if (!mounted) return;
       _showSuccessDialog(isMapping: false);
     } catch (e) {
-      _showError(
-          "${AppLocalizations.of(context)!.failed_to_start_navigation}: $e");
+      _showError("Failed to start navigation: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -201,14 +195,14 @@ class _FunctionPageState extends State<FunctionPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.execution_successful),
-        content: Text(AppLocalizations.of(context)!.enter_map_confirm),
+        title: const Text("Execution Successful"),
+        content: const Text("Would you like to enter the map?"),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
             },
-            child: Text(AppLocalizations.of(context)!.cancel),
+            child: const Text("No"),
           ),
           TextButton(
             onPressed: () {
@@ -216,7 +210,7 @@ class _FunctionPageState extends State<FunctionPage> {
               Navigator.pushNamed(context, "/map",
                   arguments: {'isMapping': isMapping});
             },
-            child: Text(AppLocalizations.of(context)!.ok),
+            child: const Text("Yes"),
           ),
         ],
       ),
@@ -227,17 +221,17 @@ class _FunctionPageState extends State<FunctionPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.stop_all_processes),
-        content: Text(AppLocalizations.of(context)!.stop_all_processes_confirm),
+        title: const Text("Stop All Processes?"),
+        content:
+            const Text("This will terminate all running backend processes."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
+            child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLocalizations.of(context)!.stop,
-                style: TextStyle(color: Colors.red)),
+            child: const Text("Stop", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -251,14 +245,12 @@ class _FunctionPageState extends State<FunctionPage> {
         toastification.show(
           context: context,
           type: ToastificationType.success,
-          title: Text(AppLocalizations.of(context)!.success),
-          description:
-              Text(AppLocalizations.of(context)!.all_processes_stopped),
+          title: const Text("Success"),
+          description: const Text("All processes stopped."),
           autoCloseDuration: const Duration(seconds: 3),
         );
       } catch (e) {
-        _showError(
-            "${AppLocalizations.of(context)!.failed_to_stop_processes}: $e");
+        _showError("Failed to stop processes: $e");
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
@@ -271,7 +263,7 @@ class _FunctionPageState extends State<FunctionPage> {
       context: context,
       type: ToastificationType.error,
       style: ToastificationStyle.fillColored,
-      title: Text(AppLocalizations.of(context)!.error),
+      title: const Text("Error"),
       description: Text(message),
       autoCloseDuration: const Duration(seconds: 4),
     );

@@ -182,18 +182,6 @@ abstract class AppLocalizations {
   /// **'机器人坐标系'**
   String get base_frame;
 
-  /// No description provided for @error.
-  ///
-  /// In zh, this message translates to:
-  /// **'错误'**
-  String get error;
-
-  /// No description provided for @function_selection.
-  ///
-  /// In zh, this message translates to:
-  /// **'功能选择'**
-  String get function_selection;
-
   /// No description provided for @laser_frame.
   ///
   /// In zh, this message translates to:
@@ -697,96 +685,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'擦除障碍物'**
   String get erase_obstacle;
-
-  /// No description provided for @enter_mapping_mode.
-  ///
-  /// In zh, this message translates to:
-  /// **'进入建图模式'**
-  String get enter_mapping_mode;
-
-  /// No description provided for @enter_navigation_mode.
-  ///
-  /// In zh, this message translates to:
-  /// **'进入导航模式'**
-  String get enter_navigation_mode;
-
-  /// No description provided for @original_map.
-  ///
-  /// In zh, this message translates to:
-  /// **'原始地图'**
-  String get original_map;
-
-  /// No description provided for @no_maps_available.
-  ///
-  /// In zh, this message translates to:
-  /// **'没有可用地图'**
-  String get no_maps_available;
-
-  /// No description provided for @execution_successful.
-  ///
-  /// In zh, this message translates to:
-  /// **'执行成功'**
-  String get execution_successful;
-
-  /// No description provided for @enter_map_confirm.
-  ///
-  /// In zh, this message translates to:
-  /// **'是否进入地图？'**
-  String get enter_map_confirm;
-
-  /// No description provided for @stop_all_processes.
-  ///
-  /// In zh, this message translates to:
-  /// **'停止所有进程？'**
-  String get stop_all_processes;
-
-  /// No description provided for @stop_all_processes_confirm.
-  ///
-  /// In zh, this message translates to:
-  /// **'这将终止所有正在运行的后台进程。'**
-  String get stop_all_processes_confirm;
-
-  /// No description provided for @success.
-  ///
-  /// In zh, this message translates to:
-  /// **'成功'**
-  String get success;
-
-  /// No description provided for @all_processes_stopped.
-  ///
-  /// In zh, this message translates to:
-  /// **'所有进程已停止。'**
-  String get all_processes_stopped;
-
-  /// No description provided for @select_map.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择地图'**
-  String get select_map;
-
-  /// No description provided for @failed_to_start_mapping.
-  ///
-  /// In zh, this message translates to:
-  /// **'启动建图失败'**
-  String get failed_to_start_mapping;
-
-  /// No description provided for @failed_to_get_map_list.
-  ///
-  /// In zh, this message translates to:
-  /// **'获取地图列表失败'**
-  String get failed_to_get_map_list;
-
-  /// No description provided for @failed_to_start_navigation.
-  ///
-  /// In zh, this message translates to:
-  /// **'启动导航失败'**
-  String get failed_to_start_navigation;
-
-  /// No description provided for @failed_to_stop_processes.
-  ///
-  /// In zh, this message translates to:
-  /// **'停止进程失败'**
-  String get failed_to_stop_processes;
 }
 
 class _AppLocalizationsDelegate

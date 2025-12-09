@@ -51,12 +51,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get base_frame => '机器人坐标系';
 
   @override
-  String get error => '错误';
-
-  @override
-  String get function_selection => '功能选择';
-
-  @override
   String get laser_frame => '激光雷达坐标系';
 
   @override
@@ -307,49 +301,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get erase_obstacle => '擦除障碍物';
-
-  @override
-  String get enter_mapping_mode => '进入建图模式';
-
-  @override
-  String get enter_navigation_mode => '进入导航模式';
-
-  @override
-  String get original_map => '原始地图';
-
-  @override
-  String get no_maps_available => '没有可用地图';
-
-  @override
-  String get execution_successful => '执行成功';
-
-  @override
-  String get enter_map_confirm => '是否进入地图？';
-
-  @override
-  String get stop_all_processes => '停止所有进程？';
-
-  @override
-  String get stop_all_processes_confirm => '这将终止所有正在运行的后台进程。';
-
-  @override
-  String get success => '成功';
-
-  @override
-  String get all_processes_stopped => '所有进程已停止。';
-
-  @override
-  String get select_map => '选择地图';
-
-  @override
-  String get failed_to_start_mapping => '启动建图失败';
-
-  @override
-  String get failed_to_get_map_list => '获取地图列表失败';
-
-  @override
-  String get failed_to_start_navigation => '启动导航失败';
-
-  @override
-  String get failed_to_stop_processes => '停止进程失败';
 }
