@@ -23,7 +23,9 @@ MAPS_DIR = os.path.expanduser("~/ros2_ws/src/slam/maps")
 bg_processes = {
     "slam": None,
     "navigation": None,
-    "rosbridge": None
+    "rosbridge": None,
+    "web_video_server": None
+
 }
 
 def kill_process(name):
@@ -110,6 +112,11 @@ async def handle_start_mapping():
     cmd_bridge = "ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
     if not run_command_bg(cmd_bridge, "rosbridge"):
         return False, "启动 ROSBridge 失败"
+    
+    # 3。启动web_video_server
+    cmd_bridge = "ros2 run web_video_server web_video_server"
+    if not run_command_bg(cmd_bridge, "web_video_server"):
+        return False, "启动 web_video_server 失败"
         
     return True, "success"
 
@@ -128,6 +135,11 @@ async def handle_start_navigation(map_name):
     cmd_bridge = "ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
     if not run_command_bg(cmd_bridge, "rosbridge"):
         return False, "启动 ROSBridge 失败"
+    
+    # 3。启动web_video_server
+    cmd_bridge = "ros2 run web_video_server web_video_server"
+    if not run_command_bg(cmd_bridge, "web_video_server"):
+        return False, "启动 web_video_server 失败"
 
     return True, "success"
 
