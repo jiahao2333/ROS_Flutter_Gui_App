@@ -40,6 +40,11 @@ def launch_setup(context):
         default_value='false',
     )
 
+    depth_camera_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(peripherals_package_path, 'launch/depth_camera.launch.py')),
+    )
+
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
 
@@ -119,6 +124,7 @@ def launch_setup(context):
             declare_params_file_cmd, 
             declare_log_level_cmd,
             declare_use_teb_cmd,
+            depth_camera_launch,
             bringup_cmd_group]
 
 def generate_launch_description():
