@@ -245,7 +245,7 @@ class Setting {
     prefs.setString('mapFrameName', "map");
     prefs.setString('baseLinkFrameName', "base_link");
     prefs.setString('imagePort', "8080");
-    prefs.setString('imageTopic', "/camera/image_raw");
+    prefs.setString('imageTopic', "/ascamera/camera_publisher/rgb0/image");
     prefs.setString('diagnosticTopic', "/diagnostics");
     prefs.setDouble('imageWidth', 640);
     prefs.setDouble('imageHeight', 480);
