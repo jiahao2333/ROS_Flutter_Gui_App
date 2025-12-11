@@ -15,7 +15,7 @@ class YoloNode(Node):
 
         # 1. 必须换成 Nano 模型！(yolo11n.pt)
         self.get_logger().info("Loading YOLOv11 Nano model...")
-        self.detection_model = YOLO("yolo11n.pt")
+        self.detection_model = YOLO("yolo11n_ncnn_model")
         
         self.bridge = CvBridge()
         self.det_image_pub = self.create_publisher(Image, "/ultralytics/detection/image", 10)
