@@ -1,0 +1,32 @@
+description: Ultralytics YOLO11n model trained on C:\Users\Jiahao\Downloads\merged_dataset\data.yaml
+author: Ultralytics
+date: '2025-12-11T23:46:31.312683'
+version: 8.3.235
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: florescence
+  1: early
+  2: green
+  3: turning
+  4: maturation
+  5: overripe
+  6: Angular_Leaf_Spot
+  7: Anthracnose_Fruit_Rot
+  8: Blossom_Blight
+  9: Gray_Mold
+  10: Leaf_Spot
+  11: Powdery_Mildew_Fruit
+  12: Powdery_Mildew_Leaf
+  13: Leaf_Scorch
+  14: Healthy
+args:
+  batch: 1
+  half: false
+channels: 3
