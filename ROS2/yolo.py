@@ -38,7 +38,7 @@ def generate_launch_description():
                 'target_frame': 'base_link',
                 'threshold': '0.5',          # 置信度阈值
                 'iou': '0.7',                # NMS 阈值
-                'device': 'cuda:0',          # 启用 GPU
+                'device': 'cpu',          # 启用 GPU
                 'half': 'True',              # 启用 FP16 半精度加速
                 'image_reliability': qos_reliability,
                 'depth_image_reliability': qos_reliability,
