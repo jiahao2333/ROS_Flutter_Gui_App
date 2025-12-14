@@ -1,19 +1,29 @@
-from gpiozero import LED
-from time import sleep
-import signal
+import RPi.GPIO as GPIO
+import time
 
-# 使用 GPIO 17 (BCM 编码)
-led = LED(17)
+# 设置 GPIO 模式为 BCM 编码
+GPIO.setmode(GPIO.BCM)
 
-print("Container is running. Blinking LED on GPIO 17...")
+# 定义引脚
+LED_PIN = 18
+
+# 设置引脚为输出模式
+GPIO.setup(LED_PIN, GPIO.OUT)
+
+print(f"开始控制 GPIO {LED_PIN}，按 Ctrl+C 退出")
 
 try:
     while True:
-        led.on()
+        GPIO.output(LED_PIN, GPIO.HIGH) # 开灯
         print("LED ON")
-        sleep(1)
-        led.off()
+        time.sleep(1)
+        
+        GPIO.output(LED_PIN, GPIO.LOW)  # 关灯
         print("LED OFF")
-        sleep(1)
+        time.sleep(1)
+
 except KeyboardInterrupt:
-    print("Exiting...")
+    print("程序停止")
+
+finally:
+    GPIO.cleanup() # 清理 GPIO 状态，这对下次运行很重要
