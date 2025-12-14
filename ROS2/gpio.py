@@ -1,3 +1,4 @@
+from gpiozero import LED
 from time import sleep
 
 # 初始化 LED 对象，参数为 BCM 编号
