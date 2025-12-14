@@ -2,7 +2,7 @@ from gpiozero import LED
 from time import sleep
 
 # 初始化 LED 对象，参数为 BCM 编号
-led = LED(4)
+led = LED(17)
 
 while True:
     led.on()   # 点亮
