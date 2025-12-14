@@ -1,32 +1,38 @@
-import lgpio
+import gpiod
 import time
+import sys
 
-# ⚠️ 关键点：这里必须填 4，对应你的 gpiochip4 [pinctrl-rp1]
-CHIP = 4
-LED_PIN = 17 # BCM 17
+# 树莓派 5 的核心配置
+CHIP_PATH = "/dev/gpiochip4"  # 直接指定设备路径
+LINE_OFFSET = 17              # BCM 17
 
-print(f"正在打开 gpiochip{CHIP} (RP1)...")
+print(f"正在尝试打开 {CHIP_PATH} ...")
 
 try:
-    # 打开第 4 号芯片
-    h = lgpio.gpiochip_open(CHIP)
-    print("✅ 成功连接到 RP1 芯片！")
-
-    # 申请引脚
-    lgpio.gpio_claim_output(h, LED_PIN)
+    # 1. 获取芯片对象
+    chip = gpiod.Chip(CHIP_PATH)
+    print(f"✅ 成功连接芯片: {chip.label}")
     
+    # 2. 获取引脚 (Line)
+    line = chip.get_line(LINE_OFFSET)
+    
+    # 3. 申请控制权 (设置为输出模式)
+    config = gpiod.LineRequestConfig(consumer="DockerTest")
+    line.request(config, type=gpiod.LINE_REQ_DIR_OUT)
+    
+    print("开始闪烁...")
     while True:
-        lgpio.gpio_write(h, LED_PIN, 1)
+        line.set_value(1)
         print("LED ON")
         time.sleep(1)
-        lgpio.gpio_write(h, LED_PIN, 0)
+        line.set_value(0)
         print("LED OFF")
         time.sleep(1)
 
+except OSError as e:
+    print(f"❌ 系统级错误: {e}")
+    print("如果是 'No such file' -> 确认 /dev/gpiochip4 是否存在")
+    print("如果是 'Permission denied' -> 确认 docker run 加了 --privileged")
+    print("如果是 'Device or resource busy' -> 说明有别的程序(如系统服务)正在占用这个引脚")
 except Exception as e:
-    print(f"❌ 错误: {e}")
-finally:
-    try:
-        lgpio.gpiochip_close(h)
-    except:
-        pass
+    print(f"❌ 未知错误: {e}")
