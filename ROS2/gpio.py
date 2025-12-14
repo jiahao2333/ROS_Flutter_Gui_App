@@ -1,21 +1,25 @@
-# test_gpio.py
-import RPi.GPIO as GPIO
-import time
+import lgpio
 
-# 强制指定 GPIO 18 (物理引脚12)
-LED_PIN = 17
+print("尝试直接打开 gpiochip4 (树莓派5专用)...")
 
 try:
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(LED_PIN, GPIO.OUT)
-    print(f"成功打开 GPIO {LED_PIN}！(对应树莓派5的 Chip 4)")
+    # 树莓派5的关键接口是 chip 4
+    h = lgpio.gpiochip_open(4)
+    print("✅ 成功！Chip 4 可以打开！")
     
-    # 尝试操作一下
-    GPIO.output(LED_PIN, GPIO.HIGH)
-    time.sleep(0.5)
-    GPIO.output(LED_PIN, GPIO.LOW)
-    print("操作成功，GPIO 库工作正常。")
+    # 获取芯片信息
+    info = lgpio.gpiochip_get_info(h)
+    print(f"   芯片名称: {info.name}")
+    print(f"   引脚数量: {info.lines}")
     
-    GPIO.cleanup()
+    lgpio.gpiochip_close(h)
+    
 except Exception as e:
-    print(f"依然报错: {e}")
+    print(f"❌ 失败: {e}")
+    print("尝试打开 chip 0 (旧版树莓派默认)...")
+    try:
+        h = lgpio.gpiochip_open(0)
+        print("⚠️ Chip 0 打开了 (但这在树莓派5上通常是系统控制芯片，不是GPIO)")
+        lgpio.gpiochip_close(h)
+    except:
+        print("❌ Chip 0 也打不开")
